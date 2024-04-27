@@ -1,6 +1,6 @@
 ﻿int numerosTotais = 9, aux = 0, verificacao = 0, qtd = 5, posicao = 0, numPessoas = 0, numAtual = 0;
-int qtdLinhaColuna = 3, tabelaPorJogador = 1;
-bool numeroChecado = false, posibilidadeLinha = false, posibilidadeColuna = false, posibilidadeCartela = false;
+int qtdLinhaColuna = 3, jogadorCartela = 0, numeroSorteado = 0, indice = 0, tamanhoVetorPessoasCartelas = 0, numPorPessoa = 0;
+bool posibilidadeLinha = false, posibilidadeColuna = false, posibilidadeCartela = false;
 int[] checar = new int[2];
 
 //CRIAR VETOR E MATRIZ  
@@ -15,25 +15,32 @@ int[] CriarVetor(int numMax)
     return vetor;
 }
 
-// CARTELA SORTEIO
-int[] PovoarVetor()
+// NUMERO SORTEIO
+int SortearNumero(int[] numerosSorteados)
 {
-    int[] vetor = CriarVetor(numerosTotais);
-    for (int i = 0; i < numerosTotais; i++)
+    bool numeroChecado = false;
+    do
     {
         verificacao = 0;
         aux = new Random().Next(1, 10);
         for (int j = numerosTotais - 1; j > -1; j--)
         {
-            if (aux == vetor[j])
+            if (aux == numerosSorteados[j])
                 verificacao++;
         }
         if (verificacao == 0)
-            vetor[i] = aux;
-        else
-            i--;
+        {
+            numerosSorteados[indice] = aux;
+            numeroChecado = true;
+            indice++;
+        }
     }
-    return vetor;
+    while (numeroChecado != true);
+    return aux;
+}
+void ImprimirNumero(int numAtual)
+{
+    Console.WriteLine($"Número Sorteado:{numAtual}");
 }
 
 // CARTELA JOGADOR
@@ -49,10 +56,11 @@ int[,] PovoarCartela()
     }
     return cartela;
 }
+
+// CHECAR
 int ChecarRepetidoCartela(int[,] cartela, int linha, int coluna, int opcao)
 {
     int num = 0;
-    numeroChecado = false;
     while (num == 0)
     {
         aux = new Random().Next(1, 10);
@@ -66,16 +74,21 @@ int ChecarCartela(int[,] cartela, int aux, int opcao)
     verificacao = 0;
     int linha = 0;
     int coluna = 0;
+    int vetorLinha = 0;
     int num = 0;
-    for (int i = 0; i < qtdLinhaColuna; i++)
+    for (int v = 0; v < tamanhoVetorPessoasCartelas; v++)
     {
-        for (int j = 0; j < qtdLinhaColuna; j++)
+        for (int i = 0; i < qtdLinhaColuna; i++)
         {
-            if (aux == cartela[i, j])
+            for (int j = 0; j < qtdLinhaColuna; j++)
             {
-                linha = i;
-                coluna = j;
-                verificacao++;
+                if (aux == cartela[i, j])
+                {
+                    linha = i;
+                    coluna = j;
+                    vetorLinha = v;
+                    verificacao++;
+                }
             }
         }
     }
@@ -107,65 +120,77 @@ void ImprimirMatriz(int[,] matriz)
     }
     Console.WriteLine("\n");
 }
-
-// NUMERO SORTEIO
-int SortearNumero(int[] vetor)
+void ImprimirVetorMatriz(int[][,] matriz, int cartelaPorJogador)
 {
-    int numeroAtual = 0;
-
-    if (posicao < numerosTotais)
+    int pessoa = 1;
+    Console.WriteLine();
+    for (int indexVetor = 0; indexVetor < tamanhoVetorPessoasCartelas; indexVetor++)
     {
-        numeroAtual = vetor[posicao];
-        ImprimirNumero(vetor, posicao);
-        posicao++;
-    }
+        if (numPorPessoa == 0)
+            Console.WriteLine($"Cartelas da {pessoa}ª pessoa:");
 
-    return numeroAtual;
-}
-void ImprimirNumero(int[] vetor, int posicao)
-{
-    Console.WriteLine($"Número Sorteado:{vetor[posicao]}");
+        if (numPorPessoa < cartelaPorJogador - 1)
+            numPorPessoa++;
+        else
+        {
+            numPorPessoa = 0;
+            pessoa++;
+        }
+        for (int linha = 0; linha < qtdLinhaColuna; linha++)
+        {
+            for (int coluna = 0; coluna < qtdLinhaColuna; coluna++)
+                Console.Write($"{matriz[indexVetor][linha, coluna]}, ");
+
+            Console.WriteLine();
+        }
+        Console.WriteLine();
+    }
+    Console.WriteLine("\n");
 }
 
 // CHECAR
-int[] ChecarCartelaParaPontuar(int[,] cartela)
+int[] ChecarCartelaParaPontuar(int[][,] cartela)
 {
     int[] checar = CriarVetor(2);
-    int verificacaoTotal = 0;
-    for (int i = 0; i < qtdLinhaColuna; i++)
-    {
-        int verificacaoColuna = 0;
-        int verificacaoLinha = 0;
-        for (int j = 0; j < qtdLinhaColuna; j++)
-        {
-            if (cartela[i, j] == 0)
-            {
-                verificacaoLinha++;
-                verificacaoTotal++;
-            }
 
-            if (cartela[j, i] == 0)
-                verificacaoColuna++;
-        }
-        if (verificacaoLinha == qtdLinhaColuna)
+    for (int x = 0; x < tamanhoVetorPessoasCartelas; x++)
+    {
+        int verificacaoTotal = 0;
+        for (int i = 0; i < qtdLinhaColuna; i++)
         {
-            checar[0] = 1;
-            checar[1] = 1;
-        }
-        if (verificacaoColuna == qtdLinhaColuna)
-        {
-            checar[0] = 2;
-            checar[1] = 2;
-        }
-        if (verificacaoTotal == qtdLinhaColuna * qtdLinhaColuna)
-        {
-            checar[0] = 3;
-            checar[1] = 3;
+            int verificacaoColuna = 0;
+            int verificacaoLinha = 0;
+            for (int j = 0; j < qtdLinhaColuna; j++)
+            {
+                if (cartela[x][i, j] == 0)
+                {
+                    verificacaoLinha++;
+                    verificacaoTotal++;
+                }
+
+                if (cartela[x][j, i] == 0)
+                    verificacaoColuna++;
+            }
+            if (verificacaoLinha == qtdLinhaColuna)
+            {
+                checar[0] = 1;
+                checar[1] = 1;
+            }
+            if (verificacaoColuna == qtdLinhaColuna)
+            {
+                checar[0] = 2;
+                checar[1] = 2;
+            }
+            if (verificacaoTotal == qtdLinhaColuna * qtdLinhaColuna)
+            {
+                checar[0] = 3;
+                checar[1] = 3;
+            }
         }
     }
     return checar;
 }
-int[] PosibilidadePontuar(int[,] cartela)
+int[] PosibilidadePontuar(int[][,] cartela)
 {
     int[] checar = ChecarCartelaParaPontuar(cartela);
     if (checar[0] == 1 && checar[1] == 1 && posibilidadeLinha == false)
@@ -188,33 +213,56 @@ int[] PosibilidadePontuar(int[,] cartela)
 }
 
 // NUMEROS DE CARTELAS POR JOGADOR
-void NumCartelasJogador(int numJogador)
+void NumJogadorCartela(int jogadorCartela, int opcaoJogadorCartela)
 {
     do
     {
-        if (tabelaPorJogador < 1)
+        if ((jogadorCartela < 1 && opcaoJogadorCartela == 2) || (jogadorCartela < 3 && opcaoJogadorCartela == 1))
         {
             Console.WriteLine("Digite um número Valido!");
-            tabelaPorJogador = int.Parse(Console.ReadLine());
+            jogadorCartela = int.Parse(Console.ReadLine());
         }
-            
-    } while (tabelaPorJogador < 1);
+
+    } while ((jogadorCartela < 1 && opcaoJogadorCartela == 2) || (jogadorCartela < 3 && opcaoJogadorCartela == 1));
 }
-
+int[][,] GerarVetorJogador(int qtdJogador, int cartelaPorJogador)
+{
+    tamanhoVetorPessoasCartelas = qtdJogador * cartelaPorJogador;
+    int[][,] vetorPessoasCartelas = new int[tamanhoVetorPessoasCartelas][,];
+    for (int i = 0; i < tamanhoVetorPessoasCartelas; i++)
+    {
+        int[,] vetorCartela = PovoarCartela();
+        vetorPessoasCartelas[i] = vetorCartela;
+    }
+    return vetorPessoasCartelas;
+}
+int[][,] rodarVetor(int num, int[][,]vetorJogador)
+{
+    for (int i = 0; i < tamanhoVetorPessoasCartelas; i++)
+    {
+        int[,] cartela = vetorJogador[i];
+        ChecarNumSorteado(num, cartela);
+    }
+    return null;
+}
 // MAIN 
-int[] vetorSorteio = PovoarVetor();
-int[,] cartelaJogador = PovoarCartela();
+int[] vetorSorteio = CriarVetor(10);
+Console.WriteLine("Digite um número de jogadores:");
+int qtdJogador = int.Parse(Console.ReadLine());
+NumJogadorCartela(qtdJogador, 1);
 Console.WriteLine("Digite um número de tabela por jogador:");
-tabelaPorJogador = int.Parse(Console.ReadLine());
-NumCartelasJogador(tabelaPorJogador);
+int cartelaPorJogador = int.Parse(Console.ReadLine());
+NumJogadorCartela(cartelaPorJogador, 2);
+int[][,] vetorJogador = GerarVetorJogador(qtdJogador, cartelaPorJogador);
+ImprimirVetorMatriz(vetorJogador, cartelaPorJogador);
 
-ImprimirMatriz(cartelaJogador);
 do
 {
     numAtual = SortearNumero(vetorSorteio);
-    ChecarNumSorteado(numAtual, cartelaJogador);
-    PosibilidadePontuar(cartelaJogador);
-    ImprimirMatriz(cartelaJogador);
+    ImprimirNumero(numAtual);
+    rodarVetor(numAtual, vetorJogador);
+    PosibilidadePontuar(vetorJogador);
+    ImprimirVetorMatriz(vetorJogador, cartelaPorJogador);
 
     Console.ReadKey();
 } while (true);
