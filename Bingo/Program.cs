@@ -1,5 +1,5 @@
-﻿int numerosTotais = 99, aux = 0, verificacao = 0, qtd = 5, posicao = 0, numPessoas = 0, numAtual = 0, cartelaPorJogador;
-int qtdLinhaColuna = 5, numeroSorteado = 0, indice = 0, tamanhoVetorPessoasCartelas = 0, numPorPessoa = 0, NumRodada = 0, qtdJogador;
+﻿int numerosTotais = 99, aux = 0, verificacao = 0, numAtual = 0, cartelaPorJogador;
+int qtdLinhaColuna = 5, indice = 0, tamanhoVetorPessoasCartelas = 0, numPorPessoa = 0, NumRodada = 0, qtdJogador;
 bool possibilidadeLinha = true, possibilidadeColuna = true, possibilidadeCartela = true, possibilidade = true;
 int[] checar = new int[2];
 
@@ -110,7 +110,7 @@ int ChecarNumSorteado(int numAtual, int[,] cartela)
 }
 
 // IMPRIMIR
-void ImprimirVetorMatriz(int[][,] matriz, int cartelaPorJogador)
+void ImprimirVetorMatriz(int[][,] matriz, int[][,] matrizCopia, int cartelaPorJogador)
 {
     int pessoa = 1;
     Console.WriteLine();
@@ -134,8 +134,8 @@ void ImprimirVetorMatriz(int[][,] matriz, int cartelaPorJogador)
                 if (matriz[indexVetor][linha, coluna] == 0)
                 {
                     Console.BackgroundColor = ConsoleColor.White;
-                    Console.ForegroundColor = ConsoleColor.Black;                    
-                    Console.Write($" {matriz[indexVetor][linha, coluna].ToString("D3")} ");
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.Write($" {matrizCopia[indexVetor][linha, coluna].ToString("D3")} ");
                     Console.ResetColor();
                     Console.Write($"|");
                 }
@@ -204,7 +204,6 @@ void Pontuar(int[] checar, int opcaoChecagem, string tipo, int[] pontos)
 {
     int pessoa = 0;
     int verificou = 0;
-    bool pessoaJaPontuou = false;
     int cartelas = cartelaPorJogador;
 
     for (int i = 0; i < tamanhoVetorPessoasCartelas; i++)
@@ -214,8 +213,8 @@ void Pontuar(int[] checar, int opcaoChecagem, string tipo, int[] pontos)
             pessoa = IdentificarPessoa(i);
             Console.WriteLine($"PESSOA {pessoa} {tipo}");
             MarcarPontuacaoTabela(pessoa, opcaoChecagem, pontos);
-            verificou++;    
-            i += (cartelaPorJogador - 1);            
+            verificou++;
+            i += (cartelaPorJogador - 1);
         }
         if (verificou != 0)
         {
@@ -237,13 +236,9 @@ void Pontuar(int[] checar, int opcaoChecagem, string tipo, int[] pontos)
 void MarcarPontuacaoTabela(int pessoa, int opcaoChecagem, int[] pontos)
 {
     if (opcaoChecagem == 1 || opcaoChecagem == 2)
-    {
-        pontos[pessoa-1] = 1;
-    }
-    else
-    {
-        pontos[pessoa-1] = 5;
-    }
+        pontos[pessoa - 1] += 1;
+    if (opcaoChecagem == 3)
+        pontos[pessoa - 1] += 5;
 
 }
 // NUMEROS DE CARTELAS POR JOGADOR
@@ -260,6 +255,7 @@ int NumJogadorCartela(int jogadorCartela, int opcaoJogadorCartela)
     } while ((jogadorCartela < 1 && opcaoJogadorCartela == 2) || (jogadorCartela < 3 && opcaoJogadorCartela == 1));
     return jogadorCartela;
 }
+// VETOR JOGADOR
 int[][,] GerarVetorJogador(int qtdJogador, int cartelaPorJogador)
 {
     tamanhoVetorPessoasCartelas = qtdJogador * cartelaPorJogador;
@@ -270,6 +266,20 @@ int[][,] GerarVetorJogador(int qtdJogador, int cartelaPorJogador)
         vetorPessoasCartelas[i] = vetorCartela;
     }
     return vetorPessoasCartelas;
+}
+int[][,] CopiarVetorJogador(int[][,] vetorJogador)
+{
+    int[][,] copiaVetorJogador = new int[qtdJogador * cartelaPorJogador][,];
+    for (int x = 0; x < qtdJogador * cartelaPorJogador; x++)
+    {
+        copiaVetorJogador[x] = CriarMatriz();
+        for (int i = 0; i < qtdLinhaColuna; i++)
+        {
+            for (int j = 0; j < qtdLinhaColuna; j++)
+                copiaVetorJogador[x][i, j] = vetorJogador[x][i, j];
+        }
+    }
+    return copiaVetorJogador;
 }
 int[][,] rodarVetor(int num, int[][,] vetorJogador)
 {
@@ -292,7 +302,8 @@ Console.WriteLine("Digite um número de tabela por jogador:");
 cartelaPorJogador = NumJogadorCartela(int.Parse(Console.ReadLine()), 2);
 
 int[][,] vetorJogador = GerarVetorJogador(qtdJogador, cartelaPorJogador);
-ImprimirVetorMatriz(vetorJogador, cartelaPorJogador);
+int[][,] vetorJogadorCopia = CopiarVetorJogador(vetorJogador);
+ImprimirVetorMatriz(vetorJogador, vetorJogadorCopia, cartelaPorJogador);
 
 int[] vetorPontos = CriarVetor(qtdJogador);
 Console.ReadKey();
@@ -304,7 +315,7 @@ do
     ImprimirNumero(numAtual);
     rodarVetor(numAtual, vetorJogador);
     ChecarCartelaParaPontuar(vetorJogador, vetorPontos);
-    ImprimirVetorMatriz(vetorJogador, cartelaPorJogador);
+    ImprimirVetorMatriz(vetorJogador, vetorJogadorCopia, cartelaPorJogador);
     NumRodada++;
     Console.ReadKey();
     Console.Clear();
@@ -313,9 +324,7 @@ do
 
 for (int i = 0; i < qtdJogador; i++)
 {
-    int identificar = IdentificarPessoa(i);
-    int pontos = vetorPontos[i];
-    Console.WriteLine($"{identificar} FEZ {vetorPontos[i]} PONTOS;");
+    Console.WriteLine($"{i + 1} FEZ {vetorPontos[i]} PONTOS;");
 
 }
 
